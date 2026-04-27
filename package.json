@@ -2,6 +2,9 @@
   "name": "cmj_tools",
   "type": "module",
   "private": true,
+  "scripts": {
+    "update:agent": "bun run ./scripts/agent-cli-update.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
