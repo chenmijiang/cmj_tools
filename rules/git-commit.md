@@ -1,8 +1,12 @@
-Generate commit messages following Conventional Commits format.
+Generate ONE commit message in Conventional Commits style.
 
-## Format
+## Output
 
-```
+- Return ONLY the final commit message.
+- Do NOT add markdown, code fences, labels, or explanations.
+- Format:
+
+```text
 <type>(<scope>): <description>
 
 <body>
@@ -10,83 +14,102 @@ Generate commit messages following Conventional Commits format.
 <footer>
 ```
 
-## Output
+- `scope`, `body`, and `footer` are optional.
+- Add blank lines only when `body` or `footer` exists.
 
-Return ONLY the commit message, no markdown code blocks, no explanations.
+## Decision Order
 
-## Noun definitions
+1. Find the `PRIMARY intent` of the diff.
+2. Choose the most specific `type`.
+3. Add `scope` only if one area clearly dominates.
+4. Write a short, concrete `description`.
+5. Add `body` only for non-obvious WHY, IMPACT, or RISK.
+6. Add `!` and `BREAKING CHANGE:` only for real breaking changes.
 
-### Type
+## Key Terms
 
-Choose exactly one type based on the PRIMARY intent of the diff, not the file extension, not the number of files, and not the implementation technique.
+- `PRIMARY intent`: main outcome of the diff, not file type or implementation detail.
+- `Observable behavior`: anything users, API consumers, operators, or developers will notice.
+- `scope`: the main module, directory, or feature area.
+- `imperative mood`: `add`, `fix`, `remove`, not `added`, `fixed`, `removes`.
 
-Use this decision order:
+## Type Selection
 
-- `feat`: adds new user-visible behavior, API, CLI option, config capability, workflow, or output shape
-- `fix`: corrects broken behavior, regression, crash, wrong result, validation bug, or compatibility issue
-- `perf`: improves latency, throughput, memory, bundle size, or query cost without changing product behavior
-- `refactor`: restructures code without changing observable behavior and without performance as the primary goal
-- `test`: adds or updates tests only
-- `docs`: adds or updates docs, comments, or examples only
-- `style`: formatting, lint-only, or whitespace-only changes with zero semantic impact
-- `ci`: CI workflows, release automation, or pipeline config only
-- `chore`: maintenance that does not fit above, such as dependency bumps, repo config, or generated files
+Choose exactly one:
+
+- `feat`: adds behavior or capability
+- `fix`: corrects broken behavior
+- `perf`: improves performance without changing intended behavior
+- `refactor`: restructures code without behavior change
+- `docs`: docs/comments/examples only
+- `test`: tests only
+- `style`: formatting/lint/whitespace only
+- `build`: build, packaging, dependencies, artifacts
+- `ci`: CI or release automation only
+- `chore`: maintenance with no better type
+- `revert`: reverts a previous commit
 
 Tie-breakers:
 
-- If the diff both refactors and fixes behavior, use `fix`
-- If the diff both refactors and adds behavior, use `feat`
-- If a dependency or tooling change fixes runtime behavior, use `fix`; otherwise use `chore`
-- Avoid `chore` when any more specific type applies
+- behavior added + refactor => `feat`
+- behavior fixed + refactor => `fix`
+- performance improved via refactor => `perf`
+- docs/tests plus real code change => use the real code-change type
+- dependency/tooling change that fixes runtime behavior => `fix`; otherwise `build` or `chore`
+- avoid `chore` when a specific type fits
 
-### Scope
+## Scope Rules
 
-Scopes provide context about which part of the codebase is affected.
+- Use a short noun such as `auth`, `api`, `ui`, `rules`.
+- Omit `scope` for cross-cutting or repo-wide changes.
+- Do NOT invent a scope just to fill the format.
 
-- Use module or directory name: `auth`, `api`, `ui`
-- Omit for cross-module changes
+## Description Rules
 
-### Description
+- one line
+- preferably 50 characters or fewer
+- imperative mood
+- lowercase first letter
+- no trailing period
+- describe the result, not the implementation steps
 
-A brief summary of the change.
+Prefer concrete wording: `verb + object + outcome`
 
-- Max 50 chars, imperative mood, lowercase first letter, no period
-- NEVER: "update code", "fix bug", "make changes", "minor updates"
+Avoid vague summaries:
 
-### Body
+- `fix bug`
+- `update code`
+- `make changes`
+- `improve stuff`
 
-- Default: empty. Most commits need only a description line.
-- Include ONLY when:
-  - Multi-file changes need relation explained
-  - Breaking change needs migration notes
-  - Reason for change is not obvious from diff
-- Explain WHY or IMPACT, never restate WHAT the diff already shows
-- Prefer 1 line; max 2 lines; never 3
-- Each line must carry exactly one non-obvious point:
-  - motivation or constraint
-  - cross-file impact or relation
-  - migration or operational note
-- Omit the body if it starts listing files, functions, or implementation steps
+## Body And Footer
 
-### Breaking Change
+- Default: omit the `body`.
+- Add a `body` only when the subject alone is not enough.
+- Keep `body` to 1-2 short lines.
+- Explain WHY, IMPACT, CONTEXT, or RISK.
+- Do NOT list files, functions, or implementation steps.
+- Use `footer` only for structured information, especially breaking changes.
 
-- Add `!` after type/scope: `feat(api)!: restructure response format`
-- Footer: `BREAKING CHANGE: description`
+Breaking change format:
 
-## Examples
+```text
+feat(api)!: rename userId to accountId
 
-```
-docs(guide): add Python async programming guide
-```
-
-```
-refactor(auth): extract token validation into middleware
-
-Keep auth checks consistent across handlers.
+BREAKING CHANGE: clients must send accountId instead of userId.
 ```
 
-```
-feat(api)!: switch response envelope to JSON:API format
+## Hard Bans
 
-BREAKING CHANGE: response shape changed from {data, status} to {data, meta}.
-```
+- NEVER mention AI generation.
+- NEVER output multiple options.
+- NEVER add commentary before or after the message.
+- NEVER choose `type` from file extension alone.
+- NEVER force `scope`, `body`, or `footer`.
+
+## Final Check
+
+- `type` matches the PRIMARY intent
+- subject is specific and easy to understand
+- subject is imperative, lowercase-first, no period
+- `BREAKING CHANGE` appears only for real breakage
