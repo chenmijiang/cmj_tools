@@ -59,6 +59,28 @@ await new Promise((resolve) => setTimeout(resolve, 10_000));`,
   return { cli, info };
 }
 
+function createSuccessfulUpdate(
+  name: CliInfo["name"],
+  latestVersion = "2.0.0",
+  delayMs = 50,
+): UpdateTarget {
+  const cli: CliConfig = {
+    name,
+    help: ["bun", "--version"],
+    version: ["bun", "--version"],
+    update: () => ["bun", "-e", `await Bun.sleep(${delayMs});`],
+  };
+
+  const info: CliInfo = {
+    name,
+    installedVersion: "1.0.0",
+    latestVersion,
+    shouldUpdate: true,
+  };
+
+  return { cli, info };
+}
+
 afterEach(async () => {
   await Promise.all(
     [...tempPaths].map(async (path) => {
@@ -144,5 +166,26 @@ describe("agent-cli-update", () => {
     expect(starts).toEqual(["claude", "codex"]);
     expect(results).toHaveLength(2);
     expect(results.every((result) => result.cancelled)).toBe(true);
+    expect(results.every((result) => "durationMs" in result)).toBe(true);
+    results.forEach((result) => {
+      const duration = (result as { durationMs?: unknown }).durationMs;
+      expect(typeof duration).toBe("number");
+      expect(duration as number).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  test("applyUpdates reports duration for successful updates", async () => {
+    const targets = [createSuccessfulUpdate("copilot", "3.4.5", 60)];
+
+    const [result] = await applyUpdates(targets);
+    if (!result) throw new Error("expected one update result");
+
+    expect(result.ok).toBe(true);
+    expect(result.message).toBe("updated to 3.4.5");
+    expect(result).toHaveProperty("durationMs");
+
+    const duration = (result as { durationMs?: unknown }).durationMs;
+    expect(typeof duration).toBe("number");
+    expect(duration as number).toBeGreaterThanOrEqual(40);
   });
 });

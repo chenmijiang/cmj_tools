@@ -38,6 +38,7 @@ type UpdateResult = {
   name: CliName;
   ok: boolean;
   message: string;
+  durationMs: number;
   cancelled?: boolean;
 };
 
@@ -78,6 +79,15 @@ const versionOf = (text: string) =>
 const compareVersion = (left: string, right: string) =>
   left.localeCompare(right, undefined, { numeric: true, sensitivity: "base" });
 const CANCELLED_MESSAGE = "cancelled by SIGINT";
+const now = () => performance.now();
+const elapsedMs = (startedAt: number) =>
+  Math.max(0, Math.round(now() - startedAt));
+
+function formatDuration(durationMs: number): string {
+  if (durationMs >= 10_000) return `${(durationMs / 1000).toFixed(1)}s`;
+  if (durationMs >= 1_000) return `${(durationMs / 1000).toFixed(2)}s`;
+  return `${durationMs}ms`;
+}
 
 async function streamText(stream: unknown): Promise<string> {
   if (!(stream instanceof ReadableStream)) return "";
@@ -167,8 +177,14 @@ async function inspectCli(cli: CliConfig): Promise<CliInfo> {
   }
 }
 
-function cancelledResult(name: CliName): UpdateResult {
-  return { name, ok: false, cancelled: true, message: CANCELLED_MESSAGE };
+function cancelledResult(name: CliName, durationMs: number): UpdateResult {
+  return {
+    name,
+    ok: false,
+    cancelled: true,
+    message: CANCELLED_MESSAGE,
+    durationMs,
+  };
 }
 
 function messageOf(error: unknown): string {
@@ -187,21 +203,30 @@ async function updateCli(
   info: CliInfo,
   signal?: AbortSignal,
 ): Promise<UpdateResult> {
+  const startedAt = now();
   let result: CommandResult | undefined;
 
   try {
     result = await run(cli.update(info.latestVersion ?? undefined), { signal });
   } catch (error) {
     return isCancelled(error)
-      ? cancelledResult(cli.name)
-      : { name: cli.name, ok: false, message: messageOf(error) };
+      ? cancelledResult(cli.name, elapsedMs(startedAt))
+      : {
+          name: cli.name,
+          ok: false,
+          message: messageOf(error),
+          durationMs: elapsedMs(startedAt),
+        };
   }
 
-  if (isCancelled(undefined, result)) return cancelledResult(cli.name);
+  if (isCancelled(undefined, result)) {
+    return cancelledResult(cli.name, elapsedMs(startedAt));
+  }
 
   return {
     name: cli.name,
     ok: result.ok,
+    durationMs: elapsedMs(startedAt),
     message: result.ok
       ? info.latestVersion
         ? `updated to ${info.latestVersion}`
@@ -264,44 +289,54 @@ function createCancellation() {
 }
 
 export async function main() {
-  console.log("Checking Agent CLIs...\n");
-  const clis = Object.values(CLIS);
-  const infos = await Promise.all(clis.map(inspectCli));
-
-  console.log("Agent CLI status:");
-  infos.forEach((info) => {
-    console.log(
-      `[${info.name}] ${statusOf(info)} | installed=${info.installedVersion ?? "unknown"} | latest=${info.latestVersion ?? "n/a"}${info.note ? ` | ${info.note}` : ""}${info.error ? ` | ${info.error}` : ""}`,
-    );
-  });
-
-  const targets = collectUpdateTargets(infos);
-
-  if (!targets.length) {
-    process.exitCode = infos.some((info) => info.error) ? 1 : 0;
-    return;
-  }
-
-  console.log("\nApplying updates:");
-  const cancellation = createCancellation();
-
+  const startedAt = now();
   try {
-    const updates = await applyUpdates(targets, {
-      signal: cancellation.signal,
-    });
-    updates.forEach((item) =>
-      console.log(`[${item.name}] ${updateStatusOf(item)} | ${item.message}`),
-    );
+    console.log("Checking Agent CLIs...\n");
+    const clis = Object.values(CLIS);
+    const infos = await Promise.all(clis.map(inspectCli));
 
-    if (cancellation.cancelled()) {
+    console.log("Agent CLI status:");
+    infos.forEach((info) => {
+      console.log(
+        `[${info.name}] ${statusOf(info)} | installed=${info.installedVersion ?? "unknown"} | latest=${info.latestVersion ?? "n/a"}${info.note ? ` | ${info.note}` : ""}${info.error ? ` | ${info.error}` : ""}`,
+      );
+    });
+
+    const targets = collectUpdateTargets(infos);
+
+    if (!targets.length) {
+      process.exitCode = infos.some((info) => info.error) ? 1 : 0;
       return;
     }
 
-    if (infos.some((info) => info.error) || updates.some((item) => !item.ok)) {
-      process.exitCode = 1;
+    console.log("\nApplying updates:");
+    const cancellation = createCancellation();
+
+    try {
+      const updates = await applyUpdates(targets, {
+        signal: cancellation.signal,
+      });
+      updates.forEach((item) =>
+        console.log(
+          `[${item.name}] ${updateStatusOf(item)} | ${item.message} | ${formatDuration(item.durationMs)}`,
+        ),
+      );
+
+      if (cancellation.cancelled()) {
+        return;
+      }
+
+      if (
+        infos.some((info) => info.error) ||
+        updates.some((item) => !item.ok)
+      ) {
+        process.exitCode = 1;
+      }
+    } finally {
+      cancellation.dispose();
     }
   } finally {
-    cancellation.dispose();
+    console.log(`\nTotal duration: ${formatDuration(elapsedMs(startedAt))}`);
   }
 }
 
