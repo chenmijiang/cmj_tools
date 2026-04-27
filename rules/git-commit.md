@@ -3,7 +3,7 @@ Generate commit messages following Conventional Commits format.
 ## Format
 
 ```
-<type>(<scope>): <subject>
+<type>(<scope>): <description>
 
 <body>
 
@@ -39,15 +39,23 @@ Tie-breakers:
 - If a dependency or tooling change fixes runtime behavior, use `fix`; otherwise use `chore`
 - Avoid `chore` when any more specific type applies
 
-### Subject
+### Scope
+
+Scopes provide context about which part of the codebase is affected.
+
+- Use module or directory name: `auth`, `api`, `ui`
+- Omit for cross-module changes
+
+### Description
+
+A brief summary of the change.
 
 - Max 50 chars, imperative mood, lowercase first letter, no period
-- Reference concrete identifiers from diff (function names, file names, module names)
 - NEVER: "update code", "fix bug", "make changes", "minor updates"
 
 ### Body
 
-- Default: empty. Most commits need only a subject line.
+- Default: empty. Most commits need only a description line.
 - Include ONLY when:
   - Multi-file changes need relation explained
   - Breaking change needs migration notes
@@ -59,11 +67,6 @@ Tie-breakers:
   - cross-file impact or relation
   - migration or operational note
 - Omit the body if it starts listing files, functions, or implementation steps
-
-### Scope
-
-- Use module or directory name: `auth`, `api`, `ui`
-- Omit for cross-module changes
 
 ### Breaking Change
 
