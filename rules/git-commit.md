@@ -10,9 +10,28 @@ Generate commit messages following Conventional Commits format.
 <footer>
 ```
 
-## Types
+## Type
 
-feat | fix | docs | style | refactor | perf | test | ci | chore
+Choose exactly one type based on the PRIMARY intent of the diff, not the file extension, not the number of files, and not the implementation technique.
+
+Use this decision order:
+
+- `feat`: adds new user-visible behavior, API, CLI option, config capability, workflow, or output shape
+- `fix`: corrects broken behavior, regression, crash, wrong result, validation bug, or compatibility issue
+- `perf`: improves latency, throughput, memory, bundle size, or query cost without changing product behavior
+- `refactor`: restructures code without changing observable behavior and without performance as the primary goal
+- `test`: adds or updates tests only
+- `docs`: adds or updates docs, comments, or examples only
+- `style`: formatting, lint-only, or whitespace-only changes with zero semantic impact
+- `ci`: CI workflows, release automation, or pipeline config only
+- `chore`: maintenance that does not fit above, such as dependency bumps, repo config, or generated files
+
+Tie-breakers:
+
+- If the diff both refactors and fixes behavior, use `fix`
+- If the diff both refactors and adds behavior, use `feat`
+- If a dependency or tooling change fixes runtime behavior, use `fix`; otherwise use `chore`
+- Avoid `chore` when any more specific type applies
 
 ## Subject
 
@@ -27,8 +46,13 @@ feat | fix | docs | style | refactor | perf | test | ci | chore
   - Multi-file changes need relation explained
   - Breaking change needs migration notes
   - Reason for change is not obvious from diff
-- Explain WHY, never WHAT the diff shows
-- Max 3 lines
+- Explain WHY or IMPACT, never restate WHAT the diff already shows
+- Prefer 1 line; max 2 lines; never 3
+- Each line must carry exactly one non-obvious point:
+  - motivation or constraint
+  - cross-file impact or relation
+  - migration or operational note
+- Omit the body if it starts listing files, functions, or implementation steps
 
 ## Scope
 
@@ -53,8 +77,7 @@ docs(guide): add Python async programming guide
 ```
 refactor(auth): extract token validation into middleware
 
-Move validation logic from route handlers to shared middleware.
-Reduces duplication across 5 endpoint files.
+Keep auth checks consistent across handlers.
 ```
 
 ```
