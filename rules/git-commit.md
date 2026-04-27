@@ -35,8 +35,6 @@ Generate ONE commit message in Conventional Commits style.
 
 ## Type Selection
 
-Choose exactly one:
-
 - `feat`: adds behavior or capability
 - `fix`: corrects broken behavior
 - `perf`: improves performance without changing intended behavior
@@ -89,7 +87,7 @@ Avoid vague summaries:
 - Keep `body` to 1-2 short lines.
 - Explain WHY, IMPACT, CONTEXT, or RISK.
 - Do NOT list files, functions, or implementation steps.
-- Use `footer` only for structured information, especially breaking changes.
+- Use `footer` only for structured info, especially breaking changes.
 
 Breaking change format:
 
@@ -106,10 +104,3 @@ BREAKING CHANGE: clients must send accountId instead of userId.
 - NEVER add commentary before or after the message.
 - NEVER choose `type` from file extension alone.
 - NEVER force `scope`, `body`, or `footer`.
-
-## Final Check
-
-- `type` matches the PRIMARY intent
-- subject is specific and easy to understand
-- subject is imperative, lowercase-first, no period
-- `BREAKING CHANGE` appears only for real breakage
