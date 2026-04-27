@@ -10,7 +10,13 @@ Generate commit messages following Conventional Commits format.
 <footer>
 ```
 
-## Type
+## Output
+
+Return ONLY the commit message, no markdown code blocks, no explanations.
+
+## Noun definitions
+
+### Type
 
 Choose exactly one type based on the PRIMARY intent of the diff, not the file extension, not the number of files, and not the implementation technique.
 
@@ -33,13 +39,13 @@ Tie-breakers:
 - If a dependency or tooling change fixes runtime behavior, use `fix`; otherwise use `chore`
 - Avoid `chore` when any more specific type applies
 
-## Subject
+### Subject
 
 - Max 50 chars, imperative mood, lowercase first letter, no period
 - Reference concrete identifiers from diff (function names, file names, module names)
 - NEVER: "update code", "fix bug", "make changes", "minor updates"
 
-## Body
+### Body
 
 - Default: empty. Most commits need only a subject line.
 - Include ONLY when:
@@ -54,19 +60,15 @@ Tie-breakers:
   - migration or operational note
 - Omit the body if it starts listing files, functions, or implementation steps
 
-## Scope
+### Scope
 
 - Use module or directory name: `auth`, `api`, `ui`
 - Omit for cross-module changes
 
-## Breaking Change
+### Breaking Change
 
 - Add `!` after type/scope: `feat(api)!: restructure response format`
 - Footer: `BREAKING CHANGE: description`
-
-## Output
-
-Return ONLY the commit message, no markdown code blocks, no explanations.
 
 ## Examples
 
