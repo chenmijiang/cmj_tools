@@ -23,10 +23,11 @@ Treat exploration as a read-only reconnaissance pass. Gather enough evidence to 
 
 ## Workflow
 
-1. Start broad with cheap discovery commands such as `rg --files` and `rg -n`.
-2. Narrow fast. Once you have likely files, switch to targeted reads.
-3. Cross-check once if the first hit may be incomplete.
-4. Return a short findings report with paths, line references, and one-sentence summaries.
+1. Choose depth: `quick` stops at the primary files, `medium` confirms one extra path, and `thorough` checks extra names, directories, and similar implementations. Default to `medium`.
+2. Start broad with cheap discovery commands such as `rg --files` and `rg -n`.
+3. Narrow fast. Once you have likely files, switch to targeted reads.
+4. Cross-check once if the first hit may be incomplete.
+5. Return a short findings report with paths, line references, and one-sentence summaries.
 
 ## Search Strategy
 
@@ -34,11 +35,11 @@ Start broad when location is unknown. Prefer `rg` and `rg --files` for discovery
 
 ```bash
 rg --files | rg 'auth|login|session'
-rg -n "createSession|AUTH_TOKEN|login" src app lib
+rg -n "createSession|AUTH_TOKEN|login" .
 rg -n "retry|backoff|timeout" .
 ```
 
-Once you have likely targets, switch to direct reads. If the user already provided the file path, read it directly instead of searching first.
+Once you have likely targets, switch to direct reads. If the user already provided the file path, read it directly instead of searching first. Replace `.` with a known subtree only when that subtree is already established.
 
 ```bash
 sed -n '120,220p' path/to/file.ts
@@ -47,20 +48,23 @@ nl -ba path/to/file.ts | sed -n '120,220p'
 
 If the first search misses, try alternate naming styles, shift the root (`src`, `lib`, `packages`, `apps`, `server`), search a broader concept, and check both implementation sites and call sites.
 
-## Parallelism And Depth
+## Parallelism
 
-- Default to `medium`. Use `quick` to stop at the primary files and `thorough` to check extra names, directories, and similar implementations.
 - Run independent searches in parallel when they do not depend on each other
 - Avoid serializing unrelated searches when one result does not affect the next step
 
 ## Preferred Commands
 
-| Goal                         | Command                                    | Why                                     |
-| ---------------------------- | ------------------------------------------ | --------------------------------------- | ----------------------------------------- |
-| Find files by name or path   | `rg --files                                | rg 'pattern'`                           | Prefer over `find` for normal code search |
-| Find symbols or text         | `rg -n "pattern" path/`                    | Use multiple likely terms when needed   |
-| Trace callers or usage       | `rg -n "functionName\\(" .`                | Search call sites, not just definitions |
-| Inspect or cite a file range | `sed -n 'start,endp' file` or `nl -ba file | sed -n 'start,endp'`                    | Switch to precise reads once narrowed     |
+- Find files by name or path: `rg --files | rg 'pattern'`
+  Prefer this over `find` for normal code search.
+- Find symbols or text: `rg -n "pattern" .`
+  Use multiple likely terms when needed.
+- Trace callers or usage: `rg -n "functionName\\(" .`
+  Search call sites, not just definitions.
+- Inspect a file range: `sed -n 'start,endp' file`
+  Switch to precise reads once narrowed.
+- Cite exact lines: `nl -ba file | sed -n 'start,endp'`
+  Use this when reporting evidence.
 
 ## Report Format
 
