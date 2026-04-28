@@ -1,6 +1,6 @@
 import { $ } from "bun";
 
-export type CliName = "claude" | "codex" | "copilot" | "opencode";
+export type CliName = "claude" | "codex" | "opencode";
 type Command = readonly string[];
 
 export type CliConfig = {
@@ -55,13 +55,6 @@ const CLIS: Record<CliName, CliConfig> = {
     version: ["codex", "--version"],
     latest: ["bun", "pm", "view", "@openai/codex", "version"],
     update: (latest) => ["bun", "add", "-g", `@openai/codex@${latest}`],
-  },
-  copilot: {
-    name: "copilot",
-    help: ["copilot", "help"],
-    version: ["copilot", "version"],
-    latest: ["bun", "pm", "view", "@github/copilot", "version"],
-    update: (latest) => ["bun", "add", "-g", `@github/copilot@${latest}`],
   },
   opencode: {
     name: "opencode",
