@@ -1,6 +1,6 @@
 import { $ } from "bun";
 
-export type CliName = "claude" | "codex" | "opencode";
+export type CliName = "claude" | "codex" | "hermes" | "opencode";
 type Command = readonly string[];
 
 export type CliConfig = {
@@ -55,6 +55,12 @@ const CLIS: Record<CliName, CliConfig> = {
     version: ["codex", "--version"],
     latest: ["bun", "pm", "view", "@openai/codex", "version"],
     update: (latest) => ["bun", "add", "-g", `@openai/codex@${latest}`],
+  },
+  hermes: {
+    name: "hermes",
+    help: ["hermes", "--help"],
+    version: ["hermes", "version"],
+    update: () => ["hermes", "update", "-y"],
   },
   opencode: {
     name: "opencode",

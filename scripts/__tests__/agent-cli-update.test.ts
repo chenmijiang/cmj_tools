@@ -106,7 +106,13 @@ describe("agent-cli-update", () => {
         shouldUpdate: true,
       },
       {
-        name: "copilot",
+        name: "hermes",
+        installedVersion: "1.0.0",
+        latestVersion: null,
+        shouldUpdate: true,
+      },
+      {
+        name: "opencode",
         installedVersion: "1.0.0",
         latestVersion: "1.0.0",
         shouldUpdate: false,
@@ -122,8 +128,13 @@ describe("agent-cli-update", () => {
 
     const targets = collectUpdateTargets(infos);
 
-    expect(targets.map((target) => target.info.name)).toEqual(["claude", "codex"]);
-    expect(targets.map((target) => target.cli.name)).toEqual(["claude", "codex"]);
+    expect(targets.map((target) => target.info.name)).toEqual(["claude", "codex", "hermes"]);
+    expect(targets.map((target) => target.cli.name)).toEqual(["claude", "codex", "hermes"]);
+    expect(targets.find((target) => target.cli.name === "hermes")?.cli.update()).toEqual([
+      "hermes",
+      "update",
+      "-y",
+    ]);
   });
 
   test("run aborts a long-running subprocess with SIGINT", async () => {
@@ -175,7 +186,7 @@ describe("agent-cli-update", () => {
   });
 
   test("applyUpdates reports duration for successful updates", async () => {
-    const targets = [createSuccessfulUpdate("copilot", "3.4.5", 60)];
+    const targets = [createSuccessfulUpdate("opencode", "3.4.5", 60)];
 
     const [result] = await applyUpdates(targets);
     if (!result) throw new Error("expected one update result");
