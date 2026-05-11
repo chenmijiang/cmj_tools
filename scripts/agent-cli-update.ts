@@ -251,6 +251,24 @@ export async function applyUpdates(
   );
 }
 
+export function buildFinalErrorLine(
+  infos: readonly CliInfo[],
+  updates: readonly UpdateResult[] = [],
+): string | null {
+  const failures = [
+    ...infos
+      .filter((info) => info.error)
+      .map((info) => `[${info.name}] ${info.error}`),
+    ...updates
+      .filter((item) => !item.ok && !item.cancelled)
+      .map((item) => `[${item.name}] ${item.message}`),
+  ];
+
+  return failures.length
+    ? `Completed with errors: ${failures.join("; ")}`
+    : null;
+}
+
 function statusOf(info: CliInfo): string {
   if (info.error) return "error";
   if (info.shouldUpdate && !info.latestVersion) return "update-check-required";
@@ -289,10 +307,13 @@ function createCancellation() {
 
 export async function main() {
   const startedAt = now();
+  let infos: CliInfo[] = [];
+  let updates: UpdateResult[] = [];
+
   try {
     console.log("Checking Agent CLIs...\n");
     const clis = Object.values(CLIS);
-    const infos = await Promise.all(clis.map(inspectCli));
+    infos = await Promise.all(clis.map(inspectCli));
 
     console.log("Agent CLI status:");
     infos.forEach((info) => {
@@ -312,7 +333,7 @@ export async function main() {
     const cancellation = createCancellation();
 
     try {
-      const updates = await applyUpdates(targets, {
+      updates = await applyUpdates(targets, {
         signal: cancellation.signal,
       });
       updates.forEach((item) =>
@@ -335,6 +356,11 @@ export async function main() {
       cancellation.dispose();
     }
   } finally {
+    const finalErrorLine = buildFinalErrorLine(infos, updates);
+    if (finalErrorLine) {
+      console.log(`\n${finalErrorLine}`);
+    }
+
     console.log(`\nTotal duration: ${formatDuration(elapsedMs(startedAt))}`);
   }
 }

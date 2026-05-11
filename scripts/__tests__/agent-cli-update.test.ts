@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import {
   applyUpdates,
+  buildFinalErrorLine,
   collectUpdateTargets,
   run,
   type CliConfig,
@@ -198,5 +199,36 @@ describe("agent-cli-update", () => {
     const duration = (result as { durationMs?: unknown }).durationMs;
     expect(typeof duration).toBe("number");
     expect(duration as number).toBeGreaterThanOrEqual(40);
+  });
+
+  test("buildFinalErrorLine summarizes inspect and update failures on one final line", () => {
+    const infos: CliInfo[] = [
+      {
+        name: "hermes",
+        installedVersion: null,
+        latestVersion: null,
+        shouldUpdate: false,
+        error: 'Executable not found in $PATH: "hermes"',
+      },
+      {
+        name: "codex",
+        installedVersion: "0.128.0",
+        latestVersion: "0.130.0",
+        shouldUpdate: true,
+      },
+    ];
+
+    const line = buildFinalErrorLine(infos, [
+      {
+        name: "codex",
+        ok: false,
+        message: "permission denied",
+        durationMs: 1200,
+      },
+    ]);
+
+    expect(line).toBe(
+      'Completed with errors: [hermes] Executable not found in $PATH: "hermes"; [codex] permission denied',
+    );
   });
 });
