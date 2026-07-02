@@ -1,74 +1,60 @@
 ---
 name: lightweight-explorer
-description: Use when the task is read-only codebase exploration, such as locating files, symbols, or implementations; tracing entry points or call paths; surveying project structure; comparing similar patterns; or answering where and how something works before making edits.
+description: Explore the codebase when the user asks where something lives, how it works, or how a call path or pattern is wired. Read-only; stop once the answer is supported by evidence.
 ---
 
 # Lightweight Explorer
 
-## Overview
+## Purpose
 
-Treat exploration as a read-only reconnaissance pass. Gather enough evidence to answer the question quickly, then stop. Favor high-signal, low-cost commands and avoid unnecessary context, edits, installs, or implementation work.
+Read-only reconnaissance. Gather enough evidence to answer the question, then stop.
 
-## Use This Skill When
+## Use this skill when
 
-- User asks where a file, function, route, config, or behavior lives
-- User wants a quick architecture survey or concise explanation of how something works
-- User wants a similar implementation or a multi-file trace of a feature, module, or call path
+- Locating a file, symbol, route, config, or behavior.
+- Explaining how something works or tracing a call path.
+- Comparing similar implementations or surveying a slice of architecture.
 
-## Do Not Use It When
+## Leading words
 
-- Task requires editing files, generating code, or committing changes
-- Task depends on running builds, tests, or installers
-- User needs a full implementation plan instead of focused code search
+- **Explore** — read-only search; no edits, no commits, no installs.
+- **Narrow** — move from broad discovery to targeted reads as soon as likely targets appear.
+- **Cross-check** — verify one additional source before treating a first hit as complete.
 
 ## Workflow
 
-1. Choose depth: `quick` stops at the primary files, `medium` confirms one extra path, and `thorough` checks extra names, directories, and similar implementations. Default to `medium`.
-2. Start broad with cheap discovery commands such as `rg --files` and `rg -n`.
-3. Narrow fast. Once you have likely files, switch to targeted reads.
-4. Cross-check once if the first hit may be incomplete.
-5. Return a short findings report with paths, line references, and one-sentence summaries.
+1. **Pick a depth.**
+   - `quick`: primary file(s) only.
+   - `medium`: primary file(s) plus one confirming path or caller.
+   - `thorough`: extra names, directories, and similar implementations.
+   - Default to `medium` unless the user says otherwise.
+   - *Completion criterion:* depth is explicitly chosen and stated in the response.
 
-## Search Strategy
+2. **Discover.**
+   - Start broad with `rg --files | rg 'pattern'` and `rg -n "pattern" .`.
+   - *Completion criterion:* at least one likely file or symbol is identified.
 
-Start broad when location is unknown. Prefer `rg` and `rg --files` for discovery because they are fast and scale well.
+3. **Read.**
+   - Switch to targeted `Read` once targets are known.
+   - If the user already gave a path, read it directly and skip broad discovery.
+   - *Completion criterion:* the relevant lines or symbols are loaded and cited.
 
-```bash
-rg --files | rg 'auth|login|session'
-rg -n "createSession|AUTH_TOKEN|login" .
-rg -n "retry|backoff|timeout" .
-```
+4. **Cross-check.**
+   - Verify one additional source (caller, related implementation, or alternate naming) before reporting.
+   - *Completion criterion:* the first finding is corroborated or a gap is explicitly noted.
 
-Once you have likely targets, switch to direct reads. If the user already provided the file path, read it directly instead of searching first. Replace `.` with a known subtree only when that subtree is already established.
+5. **Report.**
+   - Return a concise findings report with `file:line` references and one-sentence summaries.
+   - *Completion criterion:* the user's question is answered and any gaps are disclosed.
 
-```bash
-sed -n '120,220p' path/to/file.ts
-nl -ba path/to/file.ts | sed -n '120,220p'
-```
+## Search strategy
 
-If the first search misses, try alternate naming styles, shift the root (`src`, `lib`, `packages`, `apps`, `server`), search a broader concept, and check both implementation sites and call sites.
+- Broad first: `rg --files | rg 'pattern'` and `rg -n "pattern" .`.
+- Trace usage: `rg -n "functionName\\(" .` or `codegraph_callers`.
+- Alternate roots: `src`, `lib`, `packages`, `apps`, `server`.
+- Run independent searches in parallel; do not serialize unrelated lookups.
 
-## Parallelism
-
-- Run independent searches in parallel when they do not depend on each other
-- Avoid serializing unrelated searches when one result does not affect the next step
-
-## Preferred Commands
-
-- Find files by name or path: `rg --files | rg 'pattern'`
-  Prefer this over `find` for normal code search.
-- Find symbols or text: `rg -n "pattern" .`
-  Use multiple likely terms when needed.
-- Trace callers or usage: `rg -n "functionName\\(" .`
-  Search call sites, not just definitions.
-- Inspect a file range: `sed -n 'start,endp' file`
-  Switch to precise reads once narrowed.
-- Cite exact lines: `nl -ba file | sed -n 'start,endp'`
-  Use this when reporting evidence.
-
-## Report Format
-
-Return a concise report that is easy to scan.
+## Report format
 
 ```md
 ## Findings
@@ -78,19 +64,10 @@ Return a concise report that is easy to scan.
 
 ## Gaps
 
-- No obvious handler for guest-session fallback in the searched paths.
+- No obvious guest-session fallback in the searched paths.
 ```
-
-## Common Mistakes
-
-- Reading too many files before narrowing the search
-- Trusting the first match without one cross-check
-- Using slower broad commands when `rg` would do the job
-- Dumping raw command output instead of reporting findings
 
 ## Guardrails
 
-- Do not create files, including temporary scratch files
-- Do not modify files or stage changes
-- Do not run write-oriented commands such as `git add`, `git commit`, `npm install`, or `mkdir`
-- Keep the answer concise and evidence-based
+- No file creation, modification, staging, or write-oriented commands (`git add`, `npm install`, `mkdir`).
+- Keep the answer concise and evidence-based.
