@@ -1,1 +1,3 @@
-bun test
+bunx oxfmt --check --no-error-on-unmatched-pattern
+
+bunx test

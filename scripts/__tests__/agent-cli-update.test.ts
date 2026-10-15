@@ -19,13 +19,12 @@ async function waitForStartedNames(path: string, expectedNames: string[]) {
   for (let attempt = 0; attempt < 50; attempt += 1) {
     try {
       const text = await readFile(path, "utf8");
-      const names = text
-        .trim()
-        .split("\n")
-        .filter(Boolean)
-        .sort();
+      const names = text.trim().split("\n").filter(Boolean).sort();
 
-      if (names.length === expectedNames.length && names.every((name, index) => name === expectedNames[index])) {
+      if (
+        names.length === expectedNames.length &&
+        names.every((name, index) => name === expectedNames[index])
+      ) {
         return;
       }
     } catch {}
@@ -169,11 +168,7 @@ describe("agent-cli-update", () => {
     controller.abort();
 
     const results = await pending;
-    const starts = (await readFile(markerPath, "utf8"))
-      .trim()
-      .split("\n")
-      .filter(Boolean)
-      .sort();
+    const starts = (await readFile(markerPath, "utf8")).trim().split("\n").filter(Boolean).sort();
 
     expect(starts).toEqual(["claude", "codex"]);
     expect(results).toHaveLength(2);

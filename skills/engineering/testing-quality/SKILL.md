@@ -57,9 +57,7 @@ test("checkout calls paymentService.process", async () => {
 // BAD: reaches past the interface to verify
 test("createUser saves to DB", async () => {
   await createUser({ name: "Alice" });
-  expect(
-    await db.query("SELECT * FROM users WHERE name = 'Alice'"),
-  ).toBeDefined();
+  expect(await db.query("SELECT * FROM users WHERE name = 'Alice'")).toBeDefined();
 });
 ```
 

@@ -72,15 +72,12 @@ const CLIS: Record<CliName, CliConfig> = {
 };
 
 const versionOf = (text: string) =>
-  text
-    .match(/\bv?\d+(?:\.\d+)+(?:[-+][0-9A-Za-z.-]+)?\b/)?.[0]
-    ?.replace(/^v/, "") ?? null;
+  text.match(/\bv?\d+(?:\.\d+)+(?:[-+][0-9A-Za-z.-]+)?\b/)?.[0]?.replace(/^v/, "") ?? null;
 const compareVersion = (left: string, right: string) =>
   left.localeCompare(right, undefined, { numeric: true, sensitivity: "base" });
 const CANCELLED_MESSAGE = "cancelled by SIGINT";
 const now = () => performance.now();
-const elapsedMs = (startedAt: number) =>
-  Math.max(0, Math.round(now() - startedAt));
+const elapsedMs = (startedAt: number) => Math.max(0, Math.round(now() - startedAt));
 
 function formatDuration(durationMs: number): string {
   if (durationMs >= 10_000) return `${(durationMs / 1000).toFixed(1)}s`;
@@ -97,10 +94,7 @@ function commandTextOf(command: Command): string {
   return command.map((part) => $.escape(part)).join(" ");
 }
 
-export async function run(
-  command: Command,
-  options: RunOptions = {},
-): Promise<CommandResult> {
+export async function run(command: Command, options: RunOptions = {}): Promise<CommandResult> {
   const proc = Bun.spawn({
     cmd: [...command],
     stdin: "ignore",
@@ -124,11 +118,7 @@ export async function run(
   };
 }
 
-function fail(
-  cli: CliConfig,
-  error: string,
-  installedVersion: string | null = null,
-): CliInfo {
+function fail(cli: CliConfig, error: string, installedVersion: string | null = null): CliInfo {
   return {
     name: cli.name,
     installedVersion,
@@ -162,8 +152,7 @@ async function inspectCli(cli: CliConfig): Promise<CliInfo> {
     }
 
     const latestVersion = latest.ok ? versionOf(latest.output) : null;
-    if (!latestVersion)
-      return fail(cli, latest.output || latest.command, installedVersion);
+    if (!latestVersion) return fail(cli, latest.output || latest.command, installedVersion);
 
     return {
       name: cli.name,
@@ -191,10 +180,7 @@ function messageOf(error: unknown): string {
 }
 
 function isCancelled(error?: unknown, result?: CommandResult): boolean {
-  return (
-    result?.signalCode === "SIGINT" ||
-    (error instanceof Error && error.name === "AbortError")
-  );
+  return result?.signalCode === "SIGINT" || (error instanceof Error && error.name === "AbortError");
 }
 
 async function updateCli(
@@ -234,9 +220,7 @@ async function updateCli(
   };
 }
 
-export function collectUpdateTargets(
-  infos: readonly CliInfo[],
-): UpdateTarget[] {
+export function collectUpdateTargets(infos: readonly CliInfo[]): UpdateTarget[] {
   return infos
     .filter((info) => info.shouldUpdate && !info.error)
     .map((info) => ({ cli: CLIS[info.name], info }));
@@ -246,9 +230,7 @@ export async function applyUpdates(
   targets: readonly UpdateTarget[],
   options: { signal?: AbortSignal } = {},
 ): Promise<UpdateResult[]> {
-  return Promise.all(
-    targets.map(({ cli, info }) => updateCli(cli, info, options.signal)),
-  );
+  return Promise.all(targets.map(({ cli, info }) => updateCli(cli, info, options.signal)));
 }
 
 export function buildFinalErrorLine(
@@ -256,17 +238,13 @@ export function buildFinalErrorLine(
   updates: readonly UpdateResult[] = [],
 ): string | null {
   const failures = [
-    ...infos
-      .filter((info) => info.error)
-      .map((info) => `[${info.name}] ${info.error}`),
+    ...infos.filter((info) => info.error).map((info) => `[${info.name}] ${info.error}`),
     ...updates
       .filter((item) => !item.ok && !item.cancelled)
       .map((item) => `[${item.name}] ${item.message}`),
   ];
 
-  return failures.length
-    ? `Completed with errors: ${failures.join("; ")}`
-    : null;
+  return failures.length ? `Completed with errors: ${failures.join("; ")}` : null;
 }
 
 function statusOf(info: CliInfo): string {
@@ -346,10 +324,7 @@ export async function main() {
         return;
       }
 
-      if (
-        infos.some((info) => info.error) ||
-        updates.some((item) => !item.ok)
-      ) {
+      if (infos.some((info) => info.error) || updates.some((item) => !item.ok)) {
         process.exitCode = 1;
       }
     } finally {

@@ -28,24 +28,24 @@ Read-only reconnaissance. Gather enough evidence to answer the question, then st
    - `medium`: primary file(s) plus one confirming path or caller.
    - `thorough`: extra names, directories, and similar implementations.
    - Default to `medium` unless the user says otherwise.
-   - *Completion criterion:* depth is explicitly chosen and stated in the response.
+   - _Completion criterion:_ depth is explicitly chosen and stated in the response.
 
 2. **Discover.**
    - Start broad with `rg --files | rg 'pattern'` and `rg -n "pattern" .`.
-   - *Completion criterion:* at least one likely file or symbol is identified.
+   - _Completion criterion:_ at least one likely file or symbol is identified.
 
 3. **Read.**
    - Switch to targeted `Read` once targets are known.
    - If the user already gave a path, read it directly and skip broad discovery.
-   - *Completion criterion:* the relevant lines or symbols are loaded and cited.
+   - _Completion criterion:_ the relevant lines or symbols are loaded and cited.
 
 4. **Cross-check.**
    - Verify one additional source (caller, related implementation, or alternate naming) before reporting.
-   - *Completion criterion:* the first finding is corroborated or a gap is explicitly noted.
+   - _Completion criterion:_ the first finding is corroborated or a gap is explicitly noted.
 
 5. **Report.**
    - Return a concise findings report with `file:line` references and one-sentence summaries.
-   - *Completion criterion:* the user's question is answered and any gaps are disclosed.
+   - _Completion criterion:_ the user's question is answered and any gaps are disclosed.
 
 ## Search strategy
 
